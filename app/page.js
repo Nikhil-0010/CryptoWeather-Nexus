@@ -1,11 +1,39 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/redux/store';
+import { fetchWeatherData } from '@/redux/features/weatherSlice';
+import { fetchCryptoData } from '@/redux/features/cryptoSlice';
+import { fetchNewsData } from '@/redux/features/newsSlice';
+import { initializeWebSocket, initializeWeatherAlerts } from '@/utils/websocket';
 import WeatherSection from '@/components/weather/WeatherSection';
 import CryptoSection from '@/components/crypto/CryptoSection';
 import NewsSection from '@/components/news/NewsSection';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function Home() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    // Initialize WebSocket connection
+    initializeWebSocket();
+    initializeWeatherAlerts();
+
+    // Fetch initial data
+    ['New York', 'London', 'Tokyo'].forEach((city) => {
+      dispatch(fetchWeatherData(city));
+    });
+
+    ['bitcoin', 'ethereum', 'cardano'].forEach((crypto) => {
+      dispatch(fetchCryptoData(crypto));
+    });
+
+    dispatch(fetchNewsData());
+    
+
+  }, [dispatch]);
+
   return (
     <main className="min-h-screen bg-background">
       <nav className="border-b">
