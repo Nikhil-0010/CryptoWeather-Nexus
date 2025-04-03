@@ -15,7 +15,7 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star } from 'lucide-react';
-import { fetchWeatherData, get7DayForecast, getCityCoordinates } from '@/redux/features/weatherSlice';
+import { fetchWeatherData, get7DayForecast } from '@/redux/features/weatherSlice';
 import { toggleFavoriteCity, loadPreferences } from '@/redux/features/preferencesSlice';
 
 export default function WeatherDetail({ params }) {
@@ -27,7 +27,6 @@ export default function WeatherDetail({ params }) {
 
   const dispatch = useDispatch();
 
-  console.log(weatherData);
 
   useEffect(() => {
     dispatch(loadPreferences());
@@ -39,8 +38,7 @@ export default function WeatherDetail({ params }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { lat, lon } = await getCityCoordinates(decodedCity);
-        const forecast = await get7DayForecast(lat, lon);
+        const forecast = await get7DayForecast(decodedCity);
         setHistoricalData(forecast);
       } catch (error) {
         console.error("Error fetching weather data:", error);
@@ -85,7 +83,7 @@ export default function WeatherDetail({ params }) {
         <div className="grid gap-8 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Current Conditions</CardTitle>
+              <CardTitle className='text-xl'>Current Conditions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
@@ -110,15 +108,15 @@ export default function WeatherDetail({ params }) {
 
           <Card>
             <CardHeader>
-              <CardTitle>7-Day Temperature History</CardTitle>
+              <CardTitle className='text-xl'>7-Day Temperature History</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={historicalData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
+                    <XAxis dataKey="date" className='text-sm' />
+                    <YAxis className='text-sm'/>
                     <Tooltip />
                     <Line
                       type="monotone"
@@ -134,15 +132,15 @@ export default function WeatherDetail({ params }) {
 
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>Humidity History</CardTitle>
+              <CardTitle className='text-xl'>Humidity History</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={historicalData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
+                    <XAxis dataKey="date" className='text-sm' />
+                    <YAxis className='text-sm'/>
                     <Tooltip />
                     <Line
                       type="monotone"

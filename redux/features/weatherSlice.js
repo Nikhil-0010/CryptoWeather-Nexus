@@ -27,42 +27,33 @@ const initialState = {
   alerts: [],
 };
 
-export const getCityCoordinates = async (city) => {
-  const geoRes = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`);
-  const geoData = await geoRes.json();
-
-  if (!geoData.length) {
-    throw new Error('City not found');
-  }
-  
-  return { lat: geoData[0].lat, lon: geoData[0].lon };
-};
-
-export const get7DayForecast = async (lat, lon) => {
-  const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=current,minutely,hourly,alerts&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`;
-
+export const get7DayForecast = async (city) => {
   try {
-    const forecastRes = await fetch(url);
-    const forecastData = await forecastRes.json();
+    // Fetch 7-day forecast from WeatherAPI
+    const url = `https://api.weatherapi.com/v1/forecast.json?key=${process.env.NEXT_PUBLIC_WEATHERAPI_KEY}&q=${city}&days=7&aqi=no&alerts=no`;
+    const response = await fetch(url);
+    const data = await response.json();
 
-    console.log("Forecast API Response:", forecastData); // Debugging
+    // ("API Response:", data); // Debugging
 
-    if (!forecastData.daily) {
-      throw new Error("API response is missing 'daily' data.");
+    if (!data.forecast || !data.forecast.forecastday) {
+      throw new Error("API response is missing 'forecastday' data.");
     }
 
-    return forecastData.daily.map((day) => ({
-      date: new Date(day.dt * 1000).toLocaleDateString(),
-      temperature: day.temp?.day ?? 0,
-      humidity: day.humidity ?? 0,
-      conditions: day.weather?.[0]?.description ?? "No data",
+    // Extract relevant details
+    const forecast = data.forecast.forecastday.map((day) => ({
+      date: day.date,
+      temperature: day.day.avgtemp_c,
+      humidity: day.day.avghumidity,
+      conditions: day.day.condition.text,
     }));
+
+    return forecast;
   } catch (error) {
-    console.error("Error fetching forecast:", error);
-    return []; // Return empty array to prevent crashes
+    console.error("Error fetching 7-day forecast:", error);
+    return [];
   }
 };
-
 
 export const fetchWeatherData = createAsyncThunk(
   'weather/fetchWeatherData',

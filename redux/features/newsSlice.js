@@ -11,6 +11,7 @@ export const fetchNewsData = createAsyncThunk('news/fetchNewsData', async () => 
     `https://newsdata.io/api/1/news?apikey=${process.env.NEXT_PUBLIC_NEWSDATA_API_KEY}&q=cryptocurrency&language=en`
   );
   const data = await response.json();
+  // console.log('API Response:', data); //Debugging
   return data.results.slice(0, 5);
 });
 

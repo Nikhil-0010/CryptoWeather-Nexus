@@ -5,7 +5,6 @@ const initialState = {
   favoriteCryptos: ['bitcoin'],
   theme: 'system',
 };
-console.log("crypto", initialState.favoriteCryptos, initialState.favoriteCities)
 
 const preferencesSlice = createSlice({
   name: 'preferences',

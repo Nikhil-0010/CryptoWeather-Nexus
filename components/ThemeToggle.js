@@ -11,9 +11,6 @@ export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const dispatch = useDispatch();
 
-  
-  console.log(theme);
-
   const handleOnClick = () =>{
     setTheme(theme === 'light' ? 'dark' : 'light');
     dispatch(toggleTheme(theme));
