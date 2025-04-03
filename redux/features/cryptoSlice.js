@@ -40,7 +40,7 @@ export const fetchCryptoData = createAsyncThunk(
   'crypto/fetchCryptoData',
   async (id) => {
     const response = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`
+      `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=inr,usd,eur,gbp,jpy&include_24hr_change=true&include_market_cap=true`
     );
     const data = await response.json();
     return { id, data };

@@ -9,10 +9,10 @@ let reconnectTimeout = null; // Timeout reference for reconnection attempts
 
 export const initializeWebSocket = () => {
   if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
-    console.log('WebSocket already initialized');
+    // console.log('WebSocket already initialized');
     return ws; // Return the existing WebSocket instance
   }
-  ws = new WebSocket('wss://ws.coincap.io/prices?assets=bitcoin,ethereum');
+  ws = new WebSocket('wss://ws.coincap.io/prices?assets=bitcoin,ethereum,cardano');
 
   ws.onopen = () => {
     store.dispatch(setWebsocketConnected(true));

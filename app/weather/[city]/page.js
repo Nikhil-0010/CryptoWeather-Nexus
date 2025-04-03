@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { ArrowLeft, Thermometer, Droplets } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -14,34 +14,46 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Star } from 'lucide-react';
+import { fetchWeatherData, get7DayForecast, getCityCoordinates } from '@/redux/features/weatherSlice';
+import { toggleFavoriteCity, loadPreferences } from '@/redux/features/preferencesSlice';
 
 export default function WeatherDetail({ params }) {
-  const { city } = params;
+  const { city } = React.use(params);
   const decodedCity = decodeURIComponent(city);
   const weatherData = useSelector((state) => state.weather.cities[decodedCity]);
   const [historicalData, setHistoricalData] = useState([]);
+  const favoriteCities = useSelector((state) => state.preferences.favoriteCities);
+
+  const dispatch = useDispatch();
+
+  console.log(weatherData);
 
   useEffect(() => {
-    // Simulate historical data (in a real app, this would come from an API)
-    const generateHistoricalData = () => {
-      const data = [];
-      const baseTemp = weatherData?.temperature || 20;
-      const baseHumidity = weatherData?.humidity || 50;
+    dispatch(loadPreferences());
+    if (weatherData.humidity === 0 && weatherData.temperature === 0 && weatherData.conditions === '') {
+      dispatch(fetchWeatherData(decodedCity));
+    }
+  }, [dispatch, decodedCity]);
 
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        data.push({
-          date: date.toLocaleDateString(),
-          temperature: baseTemp + (Math.random() * 4 - 2),
-          humidity: baseHumidity + (Math.random() * 10 - 5),
-        });
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { lat, lon } = await getCityCoordinates(decodedCity);
+        const forecast = await get7DayForecast(lat, lon);
+        setHistoricalData(forecast);
+      } catch (error) {
+        console.error("Error fetching weather data:", error);
       }
-      return data;
     };
 
-    setHistoricalData(generateHistoricalData());
-  }, [weatherData]);
+    if (!weatherData?.forecast) {
+      fetchData();
+    } else {
+      setHistoricalData(weatherData.forecast);
+    }
+
+  }, [decodedCity]);
 
   if (!weatherData) {
     return <div>City not found</div>;
@@ -60,7 +72,15 @@ export default function WeatherDetail({ params }) {
           </Link>
         </div>
 
-        <h1 className="text-4xl font-bold mb-8">{decodedCity} Weather</h1>
+        <div className='flex items-center gap-4 mb-8'>
+          <h1 className="text-4xl font-bold">{decodedCity} Weather</h1>
+          <button
+            onClick={() => {dispatch(toggleFavoriteCity(decodedCity));}}
+            className="text-muted-foreground hover:text-primary"
+          >
+            <Star className={` ${favoriteCities.includes(decodedCity) ? "text-yellow-400 fill-yellow-400" : "text-neutral-300 dark:text-neutral-700 hover:text-yellow-400 dark:hover:text-yellow-400"}`} />
+          </button>
+        </div>
 
         <div className="grid gap-8 md:grid-cols-2">
           <Card>
