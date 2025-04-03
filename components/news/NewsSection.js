@@ -3,12 +3,10 @@
 import { useSelector } from 'react-redux';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Newspaper } from 'lucide-react';
+import NewsSkeleton from '../NewsSkeleton';
 
 export default function NewsSection() {
   const { articles, loading, error } = useSelector((state) => state.news);
-  if (loading) {
-    return <div>Loading news...</div>;
-  }
 
   if (error) {
     return <div>Error loading news: {error}</div>;
@@ -18,6 +16,10 @@ export default function NewsSection() {
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Crypto News</h2>
       <div className="grid gap-4">
+        {loading? (
+          <NewsSkeleton />
+        ):(
+          <>
         {articles.map((article, index) => (
           <Card key={index} className="overflow-x-auto hover:shadow-md transition-all duration-100">
             <CardHeader className="flex flex-row items-center space-x-2 pb-2">
@@ -46,6 +48,8 @@ export default function NewsSection() {
             </CardContent>
           </Card>
         ))}
+        </>
+      )}
       </div>
     </div>
   );

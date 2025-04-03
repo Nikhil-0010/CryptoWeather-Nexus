@@ -1,20 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { ArrowLeft, TrendingUp, TrendingDown, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { useDispatch } from 'react-redux';
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  AreaChart,
-  Area,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area,
 } from 'recharts';
 import { Star } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +14,9 @@ import { initializeWebSocket } from '@/utils/websocket';
 import { fetchCryptoData } from '@/redux/features/cryptoSlice';
 import { loadPreferences, toggleFavoriteCrypto } from '@/redux/features/preferencesSlice';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import CustomTooltip from '@/components/CustomTooltip';
+import ChartSkeleton from '@/components/ChartSkeleton';
+
 
 export default function CryptoDetail({ params }) {
   const { id } = React.use(params);
@@ -32,49 +27,70 @@ export default function CryptoDetail({ params }) {
   const [selectedCurrency, setSelectedCurrency] = useState('usd');
   const isConnected = useSelector((state) => state.crypto.websocketConnected);
   const [conversionRates, setConversionRates] = useState({ usd: 1 });
+  const [isLoading, setIsLoading] = useState(true);
+
+  let abortController = new AbortController();
+  let timeoutId = null;
+  
+  useEffect(() => {
+    initializeWebSocket();
+  
+  }, [])
+  
 
   useEffect(() => {
     if (cryptoData.marketCap === 0)
       dispatch(fetchCryptoData(id));
     dispatch(loadPreferences());
-    initializeWebSocket();
   }, [dispatch])
+  
 
-  useEffect(() => {
-    let abortController = new AbortController();
+  const fetchHistoricalData = useCallback((retries = 5, delay = 2000) => {
+    if (abortController) abortController.abort(); // Cancel previous request
+    abortController = new AbortController();
 
+    setIsLoading(true);
 
-    const fetchHistoricalData = async (retries=3 ) => {
-      try {
-        const response = await fetch(`https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=${selectedCurrency}&days=30`,
-          { signal: abortController.signal}
-        );
-
+    fetch(`https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=${selectedCurrency}&days=30`, 
+      { signal: abortController.signal }
+    )
+      .then(response => {
         if (!response.ok) throw new Error('Failed to fetch historical data');
-
-        const data = await response.json();
-
+        return response.json();
+      })
+      .then(data => {
         const formattedData = data.prices.map((price, index) => ({
           date: new Date(price[0]).toLocaleDateString(),
           price: price[1],
           volume: data.total_volumes[index][1],
         }));
-
         setHistoricalData(formattedData);
-      } catch (error) {
+        setIsLoading(false);
+      })
+      .catch(error => {
         if (error.name === 'AbortError') return;
-        console.error('Failed to fetch historical data:', error);
-
+        console.warn(`Retrying fetch... attempts left: ${retries}`);
         if (retries > 0) {
-          console.log(`Retrying fetch... attempts left: ${retries}`);
-          setTimeout(() => fetchHistoricalData(retries - 1), 2000); // Retry after 2 seconds
+          setTimeout(() => fetchHistoricalData(retries - 1, delay * 2), delay);
+        } else {
+          setIsLoading(false);
+          console.error('Max retries reached. Failed to fetch data.');
         }
-      }
+      });
+  }, [id, selectedCurrency]);
+
+  
+
+  useEffect(() => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fetchHistoricalData(), 500);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (abortController) abortController.abort();
     };
 
-    fetchHistoricalData();
-
-  }, [id, selectedCurrency]);
+  }, [id, selectedCurrency, fetchHistoricalData]);
 
   if (!cryptoData) {
     return <div>Cryptocurrency not found</div>;
@@ -101,7 +117,7 @@ export default function CryptoDetail({ params }) {
     }
 
     fetchConversionRates();
-  }, []);
+  }, [id]);
 
 
   const formatPrice = (price) => {
@@ -219,38 +235,43 @@ export default function CryptoDetail({ params }) {
               <CardTitle>30-Day Price History</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={historicalData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" className="text-sm" />
-                    <YAxis
-                      className="text-sm"
-                      tickFormatter={(value) => {
-                        if (selectedCurrency === 'inr') {
-                          if (value >= 1e12) return `${(value / 1e12).toFixed(1)}T`; // Trillions
-                          if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B`; // Billions
-                          if (value >= 1e7) return `${(value / 1e7).toFixed(1)}Cr`; // Crores
-                          if (value >= 1e5) return `${(value / 1e5).toFixed(1)}L`; // Lacs
-                        } else {
-                          if (value >= 1e12) return `${(value / 1e12).toFixed(1)}T`; // Trillions
-                          if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B`; // Billions
-                          if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M`; // Millions
-                          if (value >= 1e3) return `${(value / 1e3).toFixed(1)}K`; // Thousands
-                        }
-                        return value; // Default
-                      }}
-                    />
-                    <Tooltip />
-                    <Area
-                      type="monotone"
-                      dataKey="price"
-                      stroke="hsl(var(--primary))"
-                      fill="hsl(var(--primary))"
-                      fillOpacity={0.2}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <div className="h-[300px] relative ">
+                {isLoading ? (
+                  <ChartSkeleton length={10} width={8} />
+
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={historicalData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" className="text-sm" />
+                      <YAxis
+                        className="text-sm"
+                        tickFormatter={(value) => {
+                          if (selectedCurrency === 'inr') {
+                            if (value >= 1e12) return `${(value / 1e12).toFixed(1)}T`; // Trillions
+                            if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B`; // Billions
+                            if (value >= 1e7) return `${(value / 1e7).toFixed(1)}Cr`; // Crores
+                            if (value >= 1e5) return `${(value / 1e5).toFixed(1)}L`; // Lacs
+                          } else {
+                            if (value >= 1e12) return `${(value / 1e12).toFixed(1)}T`; // Trillions
+                            if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B`; // Billions
+                            if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M`; // Millions
+                            if (value >= 1e3) return `${(value / 1e3).toFixed(1)}K`; // Thousands
+                          }
+                          return value; // Default
+                        }}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Area
+                        type="monotone"
+                        dataKey="price"
+                        stroke="hsl(var(--primary))"
+                        fill="hsl(var(--primary))"
+                        fillOpacity={0.2}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -261,6 +282,9 @@ export default function CryptoDetail({ params }) {
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
+                {isLoading? (
+                  <ChartSkeleton length={15} width={10} />
+                ):(
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={historicalData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -282,7 +306,7 @@ export default function CryptoDetail({ params }) {
                         return value; // Default
                       }}
                     />
-                    <Tooltip />
+                    <Tooltip content={<CustomTooltip />} />
                     <Area
                       type="monotone"
                       dataKey="volume"
@@ -292,6 +316,7 @@ export default function CryptoDetail({ params }) {
                     />
                   </AreaChart>
                 </ResponsiveContainer>
+                )}
               </div>
             </CardContent>
           </Card>

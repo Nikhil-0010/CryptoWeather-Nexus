@@ -5,7 +5,8 @@ import { updateCryptoPrice, setWebsocketConnected } from '@/redux/features/crypt
 import { toast } from 'sonner';
 
 let ws=null; // Singleton WebSocket instance
-let reconnectTimeout = null; // Timeout reference for reconnection attempts
+let reconnectAttempts = 0;
+const MAX_RETRIES = 5;
 
 export const initializeWebSocket = () => {
   if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
@@ -17,19 +18,30 @@ export const initializeWebSocket = () => {
   ws.onopen = () => {
     store.dispatch(setWebsocketConnected(true));
     toast.success('Connected to crypto price feed');
+    reconnectAttempts=0;
   };
 
   ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    Object.entries(data).forEach(([asset, price]) => {
-      store.dispatch(updateCryptoPrice({ id: asset, price: Number(price) }));
-    });
+    try {
+      const data = JSON.parse(event.data);
+      Object.entries(data).forEach(([asset, price]) => {
+        store.dispatch(updateCryptoPrice({ id: asset, price: Number(price) }));
+      });
+    } catch (error) {
+      console.error('WebSocket message parse error:', error);
+    }
   };
 
   ws.onclose = () => {
     store.dispatch(setWebsocketConnected(false));
-    toast.error('Disconnected from crypto price feed');
-    attemptReconnect();
+    // Only reconnect if it was an unexpected disconnect
+    if (event.code !== 1000 && reconnectAttempts < MAX_RETRIES) {
+      toast.error(`Disconnected from crypto price feed. Retrying in ${5 * (reconnectAttempts + 1)}s...`);
+      ws = null;
+      attemptReconnect();
+    } else {
+      console.warn('WebSocket closed normally or max retries reached.');
+    }
   };
 
   ws.onerror = (error) => {
@@ -38,6 +50,7 @@ export const initializeWebSocket = () => {
       ws.close();
     }
     toast.error('Error connecting to crypto price feed. Retrying...');
+    ws = null;
     attemptReconnect();
   };
 
@@ -46,12 +59,15 @@ export const initializeWebSocket = () => {
 
 // Prevent multiple reconnection attempts
 const attemptReconnect = () => {
-  if (reconnectTimeout) return; // If a reconnect is already scheduled, exit
+  if (reconnectAttempts >= MAX_RETRIES) {
+    toast.error('Max reconnect attempts reached. Please refresh the page.');
+    return;
+  }
 
-  reconnectTimeout = setTimeout(() => {
-    reconnectTimeout = null; // Clear timeout reference after execution
-    initializeWebSocket(); // Reconnect WebSocket
-  }, 5000); // Retry after 5 seconds
+  setTimeout(() => {
+    reconnectAttempts++;
+    initializeWebSocket();
+  }, 5000 * reconnectAttempts); // Exponential backoff
 };
 
 // Simulate weather alerts

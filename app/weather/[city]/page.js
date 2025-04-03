@@ -17,6 +17,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star } from 'lucide-react';
 import { fetchWeatherData, get7DayForecast } from '@/redux/features/weatherSlice';
 import { toggleFavoriteCity, loadPreferences } from '@/redux/features/preferencesSlice';
+import CustomTooltip from '@/components/CustomTooltip';
+import ChartSkeleton from '@/components/ChartSkeleton';
+
 
 export default function WeatherDetail({ params }) {
   const { city } = React.use(params);
@@ -24,6 +27,7 @@ export default function WeatherDetail({ params }) {
   const weatherData = useSelector((state) => state.weather.cities[decodedCity]);
   const [historicalData, setHistoricalData] = useState([]);
   const favoriteCities = useSelector((state) => state.preferences.favoriteCities);
+  const [isLoading, setIsLoading] = useState(true);
 
   const dispatch = useDispatch();
 
@@ -37,11 +41,14 @@ export default function WeatherDetail({ params }) {
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
         const forecast = await get7DayForecast(decodedCity);
         setHistoricalData(forecast);
       } catch (error) {
         console.error("Error fetching weather data:", error);
+      }finally{
+        setIsLoading(false);
       }
     };
 
@@ -112,12 +119,14 @@ export default function WeatherDetail({ params }) {
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
+                {isLoading ? 
+                ( <ChartSkeleton length={10} width={8} /> ):(
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={historicalData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" className='text-sm' />
                     <YAxis className='text-sm'/>
-                    <Tooltip />
+                    <Tooltip content={<CustomTooltip />}/>
                     <Line
                       type="monotone"
                       dataKey="temperature"
@@ -126,6 +135,7 @@ export default function WeatherDetail({ params }) {
                     />
                   </LineChart>
                 </ResponsiveContainer>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -136,12 +146,14 @@ export default function WeatherDetail({ params }) {
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
+                {isLoading ? 
+                ( <ChartSkeleton length={15} width={10} /> ):(
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={historicalData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" className='text-sm' />
                     <YAxis className='text-sm'/>
-                    <Tooltip />
+                    <Tooltip content={<CustomTooltip />} />
                     <Line
                       type="monotone"
                       dataKey="humidity"
@@ -150,6 +162,7 @@ export default function WeatherDetail({ params }) {
                     />
                   </LineChart>
                 </ResponsiveContainer>
+                )}
               </div>
             </CardContent>
           </Card>

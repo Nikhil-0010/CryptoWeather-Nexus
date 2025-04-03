@@ -6,22 +6,31 @@ import { fetchWeatherData } from '@/redux/features/weatherSlice';
 import { fetchCryptoData } from '@/redux/features/cryptoSlice';
 import { fetchNewsData } from '@/redux/features/newsSlice';
 import { initializeWebSocket, initializeWeatherAlerts } from '@/utils/websocket';
-import WeatherSection from '@/components/weather/WeatherSection';
-import CryptoSection from '@/components/crypto/CryptoSection';
-import NewsSection from '@/components/news/NewsSection';
+
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { loadPreferences } from '@/redux/features/preferencesSlice';
+import dynamic from 'next/dynamic';
+
+const WeatherSection = dynamic(() => import('@/components/weather/WeatherSection'), { ssr: false });
+const CryptoSection = dynamic(() => import('@/components/crypto/CryptoSection'), { ssr: false });
+const NewsSection = dynamic(() => import('@/components/news/NewsSection'), { ssr: false });
 
 export default function Home() {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    
     // Initialize WebSocket connection
     initializeWebSocket();
     initializeWeatherAlerts();
+  
+  }, [])
+
+
+  useEffect(() => {
 
     dispatch(loadPreferences());
-    
+
 
     // Fetch initial data
     ['New York', 'London', 'Tokyo'].forEach((city) => {
