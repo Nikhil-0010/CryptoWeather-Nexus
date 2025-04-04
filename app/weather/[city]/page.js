@@ -118,7 +118,7 @@ export default function WeatherDetail({ params }) {
               <CardTitle className='text-xl'>7-Day Temperature History</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] min-w-[300px] max-w-full">
+              <div className="h-[300px]">
                 {isLoading ? 
                 ( <ChartSkeleton length={10} width={8} /> ):(
                 <ResponsiveContainer width="100%" height="100%">
