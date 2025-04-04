@@ -42,7 +42,7 @@ export default function CryptoDetail({ params }) {
     if (cryptoData.marketCap === 0)
       dispatch(fetchCryptoData(id));
     dispatch(loadPreferences());
-  }, [dispatch])
+  }, [id, dispatch])
 
 
   const fetchHistoricalData = useCallback((retries = 5, delay = 2000) => {
@@ -143,10 +143,11 @@ export default function CryptoDetail({ params }) {
     setSelectedCurrency(currency);
   };
 
+
   return (
     <div className="min-h-screen bg-background p-6 lg:p-8 ">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
+        <div className="mb-6 md:mb-8">
           <Link
             href="/"
             className="inline-flex items-center text-sm text-muted-foreground hover:text-primary"
@@ -156,8 +157,8 @@ export default function CryptoDetail({ params }) {
           </Link>
         </div>
 
-        <div className='flex items-center gap-4 mb-8'>
-          <h1 className="text-4xl font-bold ">
+        <div className='flex items-center gap-4 mb-6 md:mb-8'>
+          <h1 className="text-3xl md:text-4xl font-bold ">
             {cryptoData.name} ({cryptoData.symbol})
           </h1>
           <button
@@ -170,16 +171,16 @@ export default function CryptoDetail({ params }) {
           </button>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2">
+        <div className="grid gap-6 md:gap-8 md:grid-cols-2">
           <Card>
-            <CardHeader>
+            <CardHeader className='pb-3 md:p-6'>
               <div className='flex items-center justify-between'>
-                <CardTitle>Current Price</CardTitle>
+                <CardTitle className="text-xl md:text-2xl">Current Price</CardTitle>
                 <div className="flex items-center gap-2">
                   <div className="relative">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="px-4 py-2 border rounded-md text-sm bg-white dark:bg-neutral-900 flex items-center justify-between">
+                        <button className="px-3 py-2 md:px-4 border rounded-md text-sm bg-white dark:bg-neutral-900 flex items-center justify-between">
                           {selectedCurrency.toUpperCase()}
                           <ChevronDown className="ml-2 h-4 w-4" />
                         </button>
@@ -201,19 +202,19 @@ export default function CryptoDetail({ params }) {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-2 md:space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-3xl font-bold">
+                <span className="text-2xl md:text-3xl font-bold">
                   {formatPrice(cryptoData.price)}
                 </span>
                 <div className="flex items-center">
                   {cryptoData.priceChange24h > 0 ? (
-                    <TrendingUp className="h-5 w-5 text-green-500" />
+                    <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-green-500" />
                   ) : (
-                    <TrendingDown className="h-5 w-5 text-red-500" />
+                    <TrendingDown className="h-4 w-4 md:h-5 md:w-5 text-red-500" />
                   )}
                   <span
-                    className={`ml-2 ${cryptoData.priceChange24h > 0
+                    className={`ml-2 text-sm md:text-base ${cryptoData.priceChange24h > 0
                       ? 'text-green-500'
                       : 'text-red-500'
                       }`}
@@ -222,7 +223,7 @@ export default function CryptoDetail({ params }) {
                   </span>
                 </div>
               </div>
-              <div className="text-lg text-muted-foreground">
+              <div className="text-base md:text-lg text-muted-foreground">
                 Market Cap:{' '}
                 {cryptoData.marketCap
                   ? formatMarketCap(cryptoData.marketCap)
@@ -233,7 +234,7 @@ export default function CryptoDetail({ params }) {
 
           <Card>
             <CardHeader>
-              <CardTitle>30-Day Price History</CardTitle>
+              <CardTitle className="text-xl md:text-2xl">30-Day Price History</CardTitle>
             </CardHeader>
             <CardContent className="pl-2 sm:p-6">
               <div className="h-[300px] relative  ">
@@ -278,6 +279,8 @@ export default function CryptoDetail({ params }) {
                         stroke="hsl(var(--primary))"
                         fill="hsl(var(--primary))"
                         fillOpacity={0.2}
+                        isAnimationActive={true}
+                        animationDuration={500}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -288,7 +291,7 @@ export default function CryptoDetail({ params }) {
 
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>Trading Volume</CardTitle>
+              <CardTitle className="text-xl md:text-2xl">Trading Volume</CardTitle>
             </CardHeader>
             <CardContent className="pl-2 sm:p-6">
               <div className="h-[300px]">
@@ -332,6 +335,8 @@ export default function CryptoDetail({ params }) {
                         stroke="hsl(var(--primary))"
                         fill="hsl(var(--primary))"
                         fillOpacity={0.2}
+                        isAnimationActive={true}
+                        animationDuration={500}
                       />
                     </AreaChart>
                   </ResponsiveContainer>

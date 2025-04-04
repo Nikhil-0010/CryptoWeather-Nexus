@@ -75,7 +75,7 @@ export default function WeatherDetail({ params }) {
   return (
     <div className="min-h-screen bg-background p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
+        <div className="mb-6 md:mb-8">
           <Link
             href="/"
             className="inline-flex items-center text-sm text-muted-foreground hover:text-primary"
@@ -85,8 +85,8 @@ export default function WeatherDetail({ params }) {
           </Link>
         </div>
 
-        <div className='flex items-center gap-4 mb-8'>
-          <h1 className="text-4xl font-bold">{decodedCity} Weather</h1>
+        <div className='flex items-center gap-4 mb-6 md:mb-8'>
+          <h1 className="text-3xl md:text-4xl font-bold">{decodedCity} Weather</h1>
           <button
             onClick={() => {dispatch(toggleFavoriteCity(decodedCity));}}
             className="text-muted-foreground hover:text-primary"
@@ -95,27 +95,27 @@ export default function WeatherDetail({ params }) {
           </button>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2">
+        <div className="grid gap-6 md:gap-8 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className='text-xl'>Current Conditions</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-2 md:space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <Thermometer className="mr-2 h-5 w-5 text-muted-foreground" />
-                  <span className="text-2xl font-bold">
+                  <span className="text-xl md:text-2xl font-bold">
                     {Math.round(weatherData.temperature)}°C
                   </span>
                 </div>
                 <div className="flex items-center">
                   <Droplets className="mr-2 h-5 w-5 text-muted-foreground" />
-                  <span className="text-2xl font-bold">
+                  <span className="text-xl md:text-2xl font-bold">
                     {weatherData.humidity}%
                   </span>
                 </div>
               </div>
-              <div className="text-lg text-muted-foreground">
+              <div className="text-base md:text-lg text-muted-foreground">
                 {weatherData.conditions}
               </div>
             </CardContent>
