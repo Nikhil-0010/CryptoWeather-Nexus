@@ -1,10 +1,10 @@
 export default function ChartSkeleton({ length, width }) {
     return (
-      <div className="flex items-end justify-center space-x-2 h-full w-full relative animate-pulse">
+      <div className="flex items-end justify-center  h-full max-w-screen relative animate-pulse">
         {Array.from({ length: length }).map((_, i) => (
           <div
             key={i}
-            className={`w-${width} ${i % 2 === 0 ? 'bg-neutral-200 dark:bg-neutral-700' : 'bg-neutral-100 dark:bg-neutral-600'} rounded`}
+            className={`md:w-${width} w-4 ${i % 2 === 0 ? 'bg-neutral-200 dark:bg-neutral-700' : 'bg-neutral-100 dark:bg-neutral-600'} rounded`}
             style={{ height: `${30 + (i % 3) * 15}%` }} // Alternating heights
           ></div>
         ))}
