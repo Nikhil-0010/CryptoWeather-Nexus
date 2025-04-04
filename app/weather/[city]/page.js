@@ -44,7 +44,15 @@ export default function WeatherDetail({ params }) {
       setIsLoading(true);
       try {
         const forecast = await get7DayForecast(decodedCity);
-        setHistoricalData(forecast);
+        const formattedForecast = forecast.map((entry) => ({
+          ...entry,
+          formattedDate: entry.date.split('-').reverse().join('-'),
+          date: new Date(entry.date).toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+          }),
+        }));
+        setHistoricalData(formattedForecast);
       } catch (error) {
         console.error("Error fetching weather data:", error);
       }finally{
@@ -65,7 +73,7 @@ export default function WeatherDetail({ params }) {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <Link
@@ -117,14 +125,14 @@ export default function WeatherDetail({ params }) {
             <CardHeader>
               <CardTitle className='text-xl'>7-Day Temperature History</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pl-2 sm:p-6" >
               <div className="h-[300px]">
                 {isLoading ? 
                 ( <ChartSkeleton length={10} width={8} /> ):(
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={historicalData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" className='text-sm' />
+                    <XAxis dataKey="date" className='text-sm'dy={5} />
                     <YAxis className='text-sm'/>
                     <Tooltip content={<CustomTooltip />}/>
                     <Line
@@ -144,14 +152,14 @@ export default function WeatherDetail({ params }) {
             <CardHeader>
               <CardTitle className='text-xl'>Humidity History</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pl-2 sm:p-6">
               <div className="h-[300px]">
                 {isLoading ? 
                 ( <ChartSkeleton length={15} width={10} /> ):(
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={historicalData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" className='text-sm' />
+                    <XAxis dataKey="date" className='text-sm' dy={5} />
                     <YAxis className='text-sm'/>
                     <Tooltip content={<CustomTooltip />} />
                     <Line

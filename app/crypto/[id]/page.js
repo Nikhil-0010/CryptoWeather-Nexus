@@ -6,7 +6,7 @@ import { ArrowLeft, TrendingUp, TrendingDown, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { useDispatch } from 'react-redux';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area
 } from 'recharts';
 import { Star } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,19 +31,19 @@ export default function CryptoDetail({ params }) {
 
   let abortController = new AbortController();
   let timeoutId = null;
-  
+
   useEffect(() => {
     initializeWebSocket();
-  
+
   }, [])
-  
+
 
   useEffect(() => {
     if (cryptoData.marketCap === 0)
       dispatch(fetchCryptoData(id));
     dispatch(loadPreferences());
   }, [dispatch])
-  
+
 
   const fetchHistoricalData = useCallback((retries = 5, delay = 2000) => {
     if (abortController) abortController.abort(); // Cancel previous request
@@ -51,7 +51,7 @@ export default function CryptoDetail({ params }) {
 
     setIsLoading(true);
 
-    fetch(`https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=${selectedCurrency}&days=30`, 
+    fetch(`https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=${selectedCurrency}&days=30`,
       { signal: abortController.signal }
     )
       .then(response => {
@@ -60,7 +60,8 @@ export default function CryptoDetail({ params }) {
       })
       .then(data => {
         const formattedData = data.prices.map((price, index) => ({
-          date: new Date(price[0]).toLocaleDateString(),
+          date: price[0],
+          formattedDate: new Date(price[0]).toLocaleDateString(selectedCurrency == 'inr' ? 'en-IN' : 'en-US'),
           price: price[1],
           volume: data.total_volumes[index][1],
         }));
@@ -79,7 +80,7 @@ export default function CryptoDetail({ params }) {
       });
   }, [id, selectedCurrency]);
 
-  
+
 
   useEffect(() => {
     clearTimeout(timeoutId);
@@ -143,7 +144,7 @@ export default function CryptoDetail({ params }) {
   };
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background p-6 lg:p-8 ">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <Link
@@ -234,8 +235,8 @@ export default function CryptoDetail({ params }) {
             <CardHeader>
               <CardTitle>30-Day Price History</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-[300px] relative ">
+            <CardContent className="pl-2 sm:p-6">
+              <div className="h-[300px] relative  ">
                 {isLoading ? (
                   <ChartSkeleton length={10} width={8} />
 
@@ -243,9 +244,18 @@ export default function CryptoDetail({ params }) {
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={historicalData}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" className="text-sm" />
+                      <XAxis dataKey="date" className="text-xs lg:text-sm"
+                        tickFormatter={(date) => {
+                          const d = new Date(date);
+                          return d.toLocaleDateString(selectedCurrency == 'inr' ? 'en-IN' : 'en-US', {
+                            day: '2-digit',
+                            month: 'short',
+                          })
+                        }}
+                        tick={{ dy: 5 }}
+                      />
                       <YAxis
-                        className="text-sm"
+                        className="text-xs lg:text-sm"
                         tickFormatter={(value) => {
                           if (selectedCurrency === 'inr') {
                             if (value >= 1e12) return `${(value / 1e12).toFixed(1)}T`; // Trillions
@@ -280,42 +290,51 @@ export default function CryptoDetail({ params }) {
             <CardHeader>
               <CardTitle>Trading Volume</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pl-2 sm:p-6">
               <div className="h-[300px]">
-                {isLoading? (
+                {isLoading ? (
                   <ChartSkeleton length={15} width={10} />
-                ):(
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={historicalData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" className="text-sm" />
-                    <YAxis
-                      className="text-sm"
-                      tickFormatter={(value) => {
-                        if (selectedCurrency === 'inr') {
-                          if (value >= 1e12) return `${(value / 1e12).toFixed(1)}T`; // Trillions
-                          if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B`; // Billions
-                          if (value >= 1e7) return `${(value / 1e7).toFixed(1)}Cr`; // Crores
-                          if (value >= 1e5) return `${(value / 1e5).toFixed(1)}L`; // Lacs
-                        } else {
-                          if (value >= 1e12) return `${(value / 1e12).toFixed(1)}T`; // Trillions
-                          if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B`; // Billions
-                          if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M`; // Millions
-                          if (value >= 1e3) return `${(value / 1e3).toFixed(1)}K`; // Thousands
-                        }
-                        return value; // Default
-                      }}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area
-                      type="monotone"
-                      dataKey="volume"
-                      stroke="hsl(var(--primary))"
-                      fill="hsl(var(--primary))"
-                      fillOpacity={0.2}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={historicalData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" className="text-xs lg:text-sm"
+                        tickFormatter={(date) => {
+                          const d = new Date(date);
+                          return d.toLocaleDateString(selectedCurrency == 'inr' ? 'en-IN' : 'en-US', {
+                            day: '2-digit',
+                            month: 'short',
+                          })
+                        }}
+                        dy={5}
+                      />
+                      <YAxis
+                        className="text-xs lg:text-sm"
+                        tickFormatter={(value) => {
+                          if (selectedCurrency === 'inr') {
+                            if (value >= 1e12) return `${(value / 1e12).toFixed(1)}T`; // Trillions
+                            if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B`; // Billions
+                            if (value >= 1e7) return `${(value / 1e7).toFixed(1)}Cr`; // Crores
+                            if (value >= 1e5) return `${(value / 1e5).toFixed(1)}L`; // Lacs
+                          } else {
+                            if (value >= 1e12) return `${(value / 1e12).toFixed(1)}T`; // Trillions
+                            if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B`; // Billions
+                            if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M`; // Millions
+                            if (value >= 1e3) return `${(value / 1e3).toFixed(1)}K`; // Thousands
+                          }
+                          return value; // Default
+                        }}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Area
+                        type="monotone"
+                        dataKey="volume"
+                        stroke="hsl(var(--primary))"
+                        fill="hsl(var(--primary))"
+                        fillOpacity={0.2}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 )}
               </div>
             </CardContent>
