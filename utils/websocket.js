@@ -13,7 +13,7 @@ export const initializeWebSocket = () => {
     // console.log('WebSocket already initialized');
     return ws; // Return the existing WebSocket instance
   }
-  ws = new WebSocket('wss://ws.coincap.io/prices?assets=bitcoin,ethereum,cardano');
+  ws = new WebSocket(`wss://wss.coincap.io/prices?assets=bitcoin,ethereum,cardano&apiKey=${process.env.NEXT_PUBLIC_COINCAP_API_KEY}`);
 
   ws.onopen = () => {
     store.dispatch(setWebsocketConnected(true));
